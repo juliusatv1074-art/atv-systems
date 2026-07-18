@@ -3,115 +3,138 @@
 import subprocess
 
 def show_ip():
-    result = subprocess.run(["ip", "a"], capture_output=True, text=True)
-    lines = result.stdout.splitlines()
-    
-    for line in lines:
-        if "inet" in line and "brd" in line:
-            parts = line.split()
-            ip_address = parts[1].split("/")[0]
-            print()
+    try:
+        result = subprocess.run(["ip", "a"], capture_output=True, text=True)
+        lines = result.stdout.splitlines()
+        
+        for line in lines:
+            if "inet" in line and "brd" in line:
+                parts = line.split()
+                ip_address = parts[1].split("/")[0]
+                print()
+                print("=================")
+                print("IP Address")
+                print("=================")
+                print(ip_address)
 
-            print("=================")
-            print("IP Address")
-            print("=================")
-            print(ip_address)
+        return ip_address
+    except Exception as e:
+        print(f'Error getting IP: {e}')
+        return "Unknown"
 
-    return ip_address
 
 def check_network():
-    result = subprocess.run(["systemctl", "status", "NetworkManager"], capture_output=True, text=True)
-    net_manager = result.stdout
+    try:
+        result = subprocess.run(["systemctl", "status", "NetworkManager"], capture_output=True, text=True)
+        net_manager = result.stdout
 
-    print()
-    print("=================")
-    print("NetworkManager")
-    print("=================")
+        print()
+        print("=================")
+        print("NetworkManager")
+        print("=================")
 
-    if "active (running)" in net_manager:
-        print("Status: RUNNING")
-        return "RUNNING"
-    else:
-        print("Status: NOT RUNNING")
-        return "NOT RUNNING"
+        if "active (running)" in net_manager:
+            print("Status: RUNNING")
+            return "RUNNING"
+        else:
+            print("Status: NOT RUNNING")
+            return "NOT RUNNING"
+    except Exception as e:
+        print(f'Error checking Network: {e}')
+        return "ERROR"
 
 def check_firewall():
-    result = subprocess.run(["sudo", "ufw", "status"], capture_output=True, text=True)
-    firewall = result.stdout
+    try:
+        result = subprocess.run(["sudo", "ufw", "status"], capture_output=True, text=True)
+        firewall = result.stdout
 
-    print()
-    print("=================")
-    print("Firewall")
-    print("=================")
+        print()
+        print("=================")
+        print("Firewall")
+        print("=================")
 
-    if "Status: active" in firewall:
-        print("Status: ACTIVE")
-        return "ACTIVE"
-    else:
-        print("Status: INACTIVE")
-        return "INACTIVE"
-
+        if "Status: active" in firewall:
+            print("Status: ACTIVE")
+            return "ACTIVE"
+        else:
+            print("Status: INACTIVE")
+            return "INACTIVE"
+    except Exception as e:
+        print(f'Error checking firewall: {e}')
+        return "ERROR"
 
 def show_ports():
-    result = subprocess.run(["ss", "-tuln"], capture_output=True, text=True)
-    ports = result.stdout.splitlines()
+    try:
+        result = subprocess.run(["ss", "-tuln"], capture_output=True, text=True)
+        ports = result.stdout.splitlines()
 
-    port_count = 0
+        port_count = 0
 
-    print()
-    print("=================")
-    print("Listening Ports")
-    print("=================")
+        print()
+        print("=================")
+        print("Listening Ports")
+        print("=================")
 
-    for port in ports:
-        if  "LISTEN" in port:
-            print(port)
-            port_count +=1
+        for port in ports:
+            if  "LISTEN" in port:
+                print(port)
+                port_count +=1
    
-    print("\nTotal Ports:", port_count)
+        print("\nTotal Ports:", port_count)
 
-    return port_count
+        return port_count
+    except Exception as e:
+        print(f'Error showing ports: {e}')
+        return 0
 
 def ping_google():
-    result = subprocess.run(["ping", "-c", "4", "8.8.8.8"], capture_output=True, text=True)
-    ping_G = result.stdout.splitlines()
+    try:
+        result = subprocess.run(["ping", "-c", "4", "8.8.8.8"], capture_output=True, text=True)
+        ping_G = result.stdout.splitlines()
 
-    print()
+        print()
 
-    for ping in ping_G:
-        if "packet loss" in ping:
-            print("Result:", ping.strip())
-        if "rtt" in ping:
-            parts = ping.split("/")
-            print("Average Latency:",parts[4], "ms")
+        for ping in ping_G:
+            if "packet loss" in ping:
+                print("Result:", ping.strip())
+            if "rtt" in ping:
+                parts = ping.split("/")
+                print("Average Latency:",parts[4], "ms")
 
-    if "0% packet loss" in result.stdout:
-        print("Connection: HEALTHY")
-        return "HEALTHY"
-    else:
-        print("WARNING: Connection Problems")
-        return "Connection Problems"
+        if "0% packet loss" in result.stdout:
+            print("Connection: HEALTHY")
+            return "HEALTHY"
+        else:
+            print("WARNING: Connection Problems")
+            return "Connection Problems"
+    except Exception as e:
+        print(f'Error pinging: {e}')
+        return "ERROR"
 
 def scan_process():
-    result = subprocess.run(["ps", "aux"], capture_output=True, text=True)
-    scanner = result.stdout.splitlines()
-    dangerous = ["telnet", "ftp","ncat", "netcat"]
-    found = []
+    try:
+        result = subprocess.run(["ps", "aux"], capture_output=True, text=True)
+        scanner = result.stdout.splitlines()
+        dangerous = ["telnet", "ftp","ncat", "netcat"]
+        found = []
 
-    print()
+        print()
     
-    for scan in scanner:
-        for threat in dangerous:
-            if threat in scan.lower() and threat not in found:
-                found.append(threat)
+        for scan in scanner:
+            for threat in dangerous:
+                if threat in scan.lower() and threat not in found:
+                    found.append(threat)
 
-    if len(found) == 0:
-        print("No dangerous processes found")
-    else:
-        for item in found:
-            print("WARNING:", item)
+        if len(found) == 0:
+            print("No dangerous processes found")
+        else:
+            for item in found:
+                print("WARNING:", item)
 
-    return found
+        return found
+    except Exception as e:
+        print(f'Error scanning ports: {e}')
+        return []
 
 def save_report(ip, firewall, network, ports, ping, processes):
     with open("report.txt", "w") as f:
