@@ -113,6 +113,16 @@ def scan_process():
 
     return found
 
+def save_report(ip, firewall, network, ports, ping, processes):
+    with open("report.txt", "w") as f:
+        f.write(f"IP Address: {ip}\n")
+        f.write(f"Firewall: {firewall}\n")
+        f.write(f"Checking Network: {network}\n")
+        f.write(f"Show Ports: {ports}\n")
+        f.write(f"Ping Google: {ping}\n")
+        f.write(f"Scanning Running Processes: {processes}\n")
+    
+    print("\nReport saved to report.txt")
 
 def show_summary():
     ip = show_ip()
@@ -137,7 +147,8 @@ def show_summary():
     else:
         print("Overall Status: SYSTEM NEEDS ATTENTION")
 
-
+    save_report(ip, firewall, network, ports, ping, scan)
+    
 
 choice = ""
 
