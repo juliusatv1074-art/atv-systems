@@ -4,20 +4,25 @@ import subprocess
 
 def show_ip():
     try:
-        result = subprocess.run(["ip", "a"], capture_output=True, text=True)
+        result = subprocess.run(["ip", "a"], capture_output=True, text=True, check=True)
         lines = result.stdout.splitlines()
+
+        ip_address = "Unknown"
         
         for line in lines:
             if "inet" in line and "brd" in line:
                 parts = line.split()
                 ip_address = parts[1].split("/")[0]
-                print()
-                print("=================")
-                print("IP Address")
-                print("=================")
-                print(ip_address)
+                break
+
+        print()
+        print("=================")
+        print("IP Address")
+        print("=================")
+        print(ip_address)
 
         return ip_address
+    
     except Exception as e:
         print(f'Error getting IP: {e}')
         return "Unknown"
@@ -45,27 +50,32 @@ def check_network():
 
 def check_firewall():
     try:
-        result = subprocess.run(["sudo", "ufw", "status"], capture_output=True, text=True)
-        firewall = result.stdout
+        result = subprocess.run(["sudo", "-n", "ufw", "status"], capture_output=True, text=True)
 
         print()
         print("=================")
         print("Firewall")
         print("=================")
 
-        if "Status: active" in firewall:
+        if result.returncode != 0:
+            print("Status: COULD NOT CHECK")
+            print(result.stderr.strip())
+            return "ERROR"
+
+        if "Status: active" in result.stdout:
             print("Status: ACTIVE")
             return "ACTIVE"
-        else:
-            print("Status: INACTIVE")
-            return "INACTIVE"
+        
+        print("Status: INACTIVE")
+        return "INACTIVE"
+    
     except Exception as e:
         print(f'Error checking firewall: {e}')
         return "ERROR"
 
 def show_ports():
     try:
-        result = subprocess.run(["ss", "-tuln"], capture_output=True, text=True)
+        result = subprocess.run(["ss", "-tuln"], capture_output=True, text=True, check =True)
         ports = result.stdout.splitlines()
 
         port_count = 0
@@ -133,7 +143,7 @@ def scan_process():
 
         return found
     except Exception as e:
-        print(f'Error scanning ports: {e}')
+        print(f'Error scanning processes: {e}')
         return []
 
 def save_report(ip, firewall, network, ports, ping, processes):
@@ -172,35 +182,38 @@ def show_summary():
 
     save_report(ip, firewall, network, ports, ping, scan)
     
+def main():
+    choice = ""
 
-choice = ""
+    while choice != "7":
+        print("\nMenu")
+        print("1. Show IP Address")
+        print("2. Check NetworkManager")
+        print("3. Check Firewall")
+        print("4. Show Open Ports")
+        print("5. Ping Google")
+        print("6. Scan Running Processes")
+        print("7. Generate report and Exit")
+    
+        choice = input("Choose: ")
+    
+        if choice == "1":
+            show_ip()
+        elif choice == "2":
+            check_network()
+        elif choice == "3":
+            check_firewall()
+        elif choice == "4":
+            show_ports()
+        elif choice == "5":
+            ping_google()
+        elif choice in "6":
+            scan_process()
+        elif choice == "7":
+            show_summary()
+            print("\nGoodbye Julius")
+        else:
+            print("Invalid choice. Enter a number from 1 to 7.")
 
-while choice != "7":
-    print("\nMenu")
-    print("1. Show IP Address")
-    print("2. Show Running Services")
-    print("3. Check Firewall")
-    print("4. Show Open Ports")
-    print("5. Ping Google")
-    print("6. Scan Running Processes")
-    print("7. Exit")
-    
-    choice = input("Choose: ")
-    
-    if choice == "1":
-        show_ip()
-    elif choice == "2":
-        check_network()
-    elif choice == "3":
-        check_firewall()
-    elif choice == "4":
-        show_ports()
-    elif choice == "5":
-        ping_google()
-    elif choice in ["6"]:
-        scan_process()
-    elif choice == "7":
-        show_summary()
-        print("\nGoodbye Julius")
-    else:
-        print("Invalid choice. Enter a number from 1 to 7.")
+if __name__ == "__main__":
+    main()
